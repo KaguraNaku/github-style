@@ -1,0 +1,8 @@
+.math-particle {
+    position: fixed;
+    font-family: 'Times New Roman', serif;
+    pointer-events: none;
+    z-index: 10000; /* 提高层级确保显示在所有元素上方 */
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}

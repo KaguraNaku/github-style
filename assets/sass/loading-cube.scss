@@ -1,0 +1,236 @@
+@use "sass:math";
+@use "sass:color";
+
+//custom mixins（不变）
+@mixin transform($transform) {
+  -webkit-transform: $transform;
+  -moz-transform: $transform;
+  transform: $transform;
+}
+@mixin animation($animation) {
+  -webkit-animation: $animation;
+  -moz-animation: $animation;
+  animation: $animation;
+}
+@mixin keyframes($name, $name1) {
+  @-webkit-keyframes #{$name} {
+    @content;
+  }
+  @-moz-keyframes #{$name} {
+    @content;
+  }
+  @-ms-keyframes #{$name} {
+    @content;
+  }
+  @keyframes #{$name} {
+    @content;
+  }
+}
+@mixin opacity($opacity) {
+  -webkit-opacity: $opacity;
+  -moz-opacity: $opacity;
+  opacity: $opacity;
+}
+@mixin border-radius($radius) {
+  -webkit-border-radius: $radius;
+  -moz-border-radius: $radius;
+  border-radius: $radius;
+}
+
+//variables（不变）
+$size: 50px;
+$primary-color: white;
+
+// 加载动画根容器（所有样式嵌套在此下，限制作用域）
+.loading-container {
+  // 全屏背景（仅作用于加载动画的背景）
+  .loading-bg {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #00c6ff; background: linear-gradient(to left, #00c6ff, #0072ff);
+    z-index: 9998;
+    display: none;
+  }
+
+  // 立方体动画（不变）
+  .cube-folding {
+    width: $size;
+    height: $size;
+    display: inline-block;
+    @include transform(rotate(45deg));
+    font-size: 0;
+    span {
+      position: relative;
+      width: math.div($size, 2);
+      height: math.div($size, 2);
+      @include transform(scale(1.1));
+      display: inline-block;
+      &::before {
+        content: "";
+        background-color: $primary-color;
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        width: math.div($size, 2);
+        height: math.div($size, 2);
+        -moz-transform-origin: 100% 100%;
+        -ms-transform-origin: 100% 100%;
+        -webkit-transform-origin: 100% 100%;
+        transform-origin: 100% 100%;
+        @include animation(folding 2.5s infinite linear both);
+      }
+    }
+    .leaf2 {
+      @include transform(rotateZ(90deg) scale(1.1));
+      &::before {
+        -webkit-animation-delay: 0.3s;
+        animation-delay: 0.3s;
+        background-color: color.adjust($primary-color, $lightness: -5%);
+      }
+    }
+    .leaf3 {
+      @include transform(rotateZ(270deg) scale(1.1));
+      &::before {
+        -webkit-animation-delay: 0.9s;
+        animation-delay: 0.9s;
+        background-color: color.adjust($primary-color, $lightness: -5%);
+      }
+    }
+    .leaf4 {
+      @include transform(rotateZ(180deg) scale(1.1));
+      &::before {
+        -webkit-animation-delay: 0.6s;
+        animation-delay: 0.6s;
+        background-color: color.adjust($primary-color, $lightness: -10%);
+      }
+    }
+  }
+
+  // 动画关键帧（不变）
+  @include keyframes(folding, folding animation) {
+    0%,
+    10% {
+      @include transform(perspective(140px) rotateX(-180deg));
+      @include opacity(0);
+    }
+    25%,
+    75% {
+      @include transform(perspective(140px) rotateX(0deg));
+      @include opacity(1);
+    }
+    90%,
+    100% {
+      @include transform(perspective(140px) rotateY(180deg));
+      @include opacity(0);
+    }
+  }
+
+  // 立方体容器（不变）
+  .cube-wrapper {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    margin-top: -$size;
+    margin-left: -$size;
+    width: $size * 2;
+    height: $size * 2;
+    text-align: center;
+    z-index: 9999;
+    display: none;
+    &:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -20px;
+      margin: auto;
+      width: $size * 1.8;
+      height: 6px;
+      z-index: 1;
+      background-color: rgba(black, 0.1);
+      -webkit-filter: blur(2px);
+      filter: blur(2px);
+      @include border-radius(100%);
+      @include animation(shadow 0.5s ease infinite alternate);
+    }
+    .loading {
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      display: block;
+      color: $primary-color;
+      position: relative;
+      top: math.div($size, 2);
+      z-index: 2;
+      @include animation(text 0.5s ease infinite alternate);
+    }
+  }
+
+  // 文字和阴影动画（不变）
+  @include keyframes(text, text animation) {
+    100% {
+      top: (math.div($size, 2)) + 10;
+    }
+  }
+  @include keyframes(shadow, shadow animation) {
+    100% {
+      bottom: -18px;
+      width: $size * 2;
+    }
+  }
+
+  // 加载动画专用标题（仅作用于加载动画的h1）
+  h1.loading-h1 {
+    position: fixed;
+    top: 10%;
+    left: 0;
+    width: 100%;
+    z-index: 10000;
+    padding: 0;
+    margin: 0;
+    display: none;
+    // 字体样式仅应用于加载动画标题
+    font-size: 40px;
+    text-align: center;
+    color: #fff;
+    font-weight: 300;
+    font-family: "Archivo Narrow", sans-serif;
+    font-display: swap;
+  }
+
+  // 底部版权信息（不变）
+  .made-with-love {
+    position: fixed;
+    left: 0;
+    width: 100%;
+    bottom: 10px;
+    text-align: center;
+    font-size: 10px;
+    z-index: 9999;
+    font-family: arial;
+    color: #fff;
+    display: none;
+    i {
+      font-style: normal;
+      color: #f50057;
+      font-size: 14px;
+      position: relative;
+      top: 2px;
+    }
+    a {
+      color: #fff;
+      text-decoration: none;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // 冗余背景元素（不变）
+  .animation-background {
+    display: none;
+  }
+}
+
+// 仅导入字体，但不全局应用（字体仅在.loading-container内通过font-family引用）
+@import url(https://cdn.jsdelivr.net/npm/typeface-archivo-narrow@1.1.13/index.css);

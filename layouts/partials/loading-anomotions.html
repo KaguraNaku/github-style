@@ -1,0 +1,99 @@
+{{ $baseUrlObj := urls.Parse .Site.BaseURL }}
+{{ $currentDomain := $baseUrlObj.Hostname }}
+
+{{ with resources.Get "sass/loading-cube.scss" }}
+  {{ $opts := dict
+    "transpiler" "dartsass"
+  }}
+  {{ with . | toCSS $opts }}
+    {{ with slice . | append (resources.Match "css/*") | resources.Concat "css/styles.css" }}
+      {{ if hugo.IsProduction }}
+        {{ with . | minify | fingerprint }}
+          <link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous">
+        {{ end }}
+      {{ else }}
+        <link rel="stylesheet" href="{{ .RelPermalink }}">
+      {{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+<div class="loading-container">
+<div class="loading-bg"></div>
+<div class="animation-background"></div>
+    <h1 class="loading-h1">Welcome to Mikann-Crossline!</h1>
+    <div class="cube-wrapper" id="loadingCubeContainer">
+        <div class="cube-folding">
+            <span class="leaf1"></span>
+            <span class="leaf2"></span>
+            <span class="leaf3"></span>
+            <span class="leaf4"></span>
+        </div>
+        <span class="loading" data-name="Loading">Loading</span>
+    </div>
+    <div class="made-with-love">
+        Made with
+        <i>♥</i> Animation by
+        <a target="_blank" href="https://codepen.io/nikhil8krishnan">Nikhil Krishnan</a>
+    </div>
+</div>
+<script>
+(function() {
+            // 获取当前域名（使用safeJS确保模板正确解析）
+            const CURRENT_DOMAIN = "{{ $currentDomain | safeJS }}";
+            
+            // 获取所有加载动画元素
+            const loadingElements = [
+		document.querySelector(".loading-bg"),
+                document.getElementById("loadingCubeContainer"),
+                document.querySelector(".animation-background"),
+                document.querySelector(".loading-h1"),
+                document.querySelector(".made-with-love")
+            ];
+
+            // 跨域判断逻辑
+            function shouldShowAnimation() {
+                const referrer = document.referrer;
+                if (!referrer) return true; // 直接访问显示动画
+                try {
+                    // 跨域访问显示动画，同域访问不显示
+                    return !new URL(referrer).hostname.includes(CURRENT_DOMAIN);
+                } catch (e) {
+                    return true; // 解析失败默认显示
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                if (!loadingElements[0]) return; // 防止重复初始化
+
+                // 同域访问：隐藏所有元素并触发完成事件
+                if (!shouldShowAnimation()) {
+                    loadingElements.forEach(el => el && (el.style.display = "none"));
+                    document.dispatchEvent(new CustomEvent("loadingAnimationComplete"));
+                    return;
+                }
+
+                // 显示动画元素
+                loadingElements.forEach(el => el && (el.style.display = "block"));
+
+                // 页面加载完成后执行淡出动画
+                window.onload = () => {
+                    setTimeout(() => {
+                        // 所有元素同步淡出（添加过渡效果）
+                        loadingElements.forEach(el => {
+                            if (el) {
+                                el.style.transition = "opacity 0.8s ease-out";
+                                el.style.opacity = "0";
+                            }
+                        });
+                        
+                        // 淡出完成后移除元素并触发完成事件
+                        setTimeout(() => {
+                            loadingElements.forEach(el => el && el.remove());
+                            document.dispatchEvent(new CustomEvent("loadingAnimationComplete"));
+                        }, 500); // 与过渡时间保持一致
+                    }, 500); // 动画显示1秒后开始淡出
+                };
+            });
+        })();
+</script>

@@ -25,4 +25,10 @@
 
     <!-- Extended head section-->
     {{ partial "extended_head.html" . }}
+    {{ if .Param "math" }}
+      {{ if .Param "katex" }}
+        {{ partialCached "/helpers/katex.html" . }}
+      {{ end }}
+    {{ end }}
 </head>
+{{ partial "loading-anomotions.html" . }}
