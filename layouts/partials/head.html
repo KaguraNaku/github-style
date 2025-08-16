@@ -30,5 +30,15 @@
         {{ partialCached "/helpers/katex.html" . }}
       {{ end }}
     {{ end }}
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CGRLY8H3PP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CGRLY8H3PP');
+</script>
 </head>
 {{ partial "loading-anomotions.html" . }}

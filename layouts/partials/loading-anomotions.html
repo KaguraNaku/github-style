@@ -18,6 +18,23 @@
   {{ end }}
 {{ end }}
 
+<!-- 添加预加载和样式锁定 -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/typeface-archivo-narrow@1.1.13/files/archivo-narrow-latin-300.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* 关键修复：确保退出前字体渲染状态稳定 */
+  h1.loading-h1 {
+    /* 添加字体渲染优化 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 固定尺寸，防止重排 */
+    width: 100%;
+    height: 48px; /* 精确匹配字体高度 */
+    line-height: 48px;
+    /* 保持透明度变化时的位置稳定 */
+    transform: translateZ(0);
+  }
+</style>
+
 <div class="loading-container">
 <div class="loading-bg"></div>
 <div class="animation-background"></div>
@@ -39,61 +56,57 @@
 </div>
 <script>
 (function() {
-            // 获取当前域名（使用safeJS确保模板正确解析）
-            const CURRENT_DOMAIN = "{{ $currentDomain | safeJS }}";
-            
-            // 获取所有加载动画元素
-            const loadingElements = [
-		document.querySelector(".loading-bg"),
-                document.getElementById("loadingCubeContainer"),
-                document.querySelector(".animation-background"),
-                document.querySelector(".loading-h1"),
-                document.querySelector(".made-with-love")
-            ];
+    const CURRENT_DOMAIN = "{{ $currentDomain | safeJS }}";
 
-            // 跨域判断逻辑
-            function shouldShowAnimation() {
-                const referrer = document.referrer;
-                if (!referrer) return true; // 直接访问显示动画
-                try {
-                    // 跨域访问显示动画，同域访问不显示
-                    return !new URL(referrer).hostname.includes(CURRENT_DOMAIN);
-                } catch (e) {
-                    return true; // 解析失败默认显示
-                }
-            }
+    const loadingElements = [
+        document.querySelector(".loading-bg"),
+        document.getElementById("loadingCubeContainer"),
+        document.querySelector(".animation-background"),
+        document.querySelector(".loading-h1"),
+        document.querySelector(".made-with-love")
+    ];
 
-            document.addEventListener("DOMContentLoaded", () => {
-                if (!loadingElements[0]) return; // 防止重复初始化
+    function shouldShowAnimation() {
+        const referrer = document.referrer;
+        if (!referrer) return true;
+        try {
+            return !new URL(referrer).hostname.includes(CURRENT_DOMAIN);
+        } catch (e) {
+            return true;
+        }
+    }
 
-                // 同域访问：隐藏所有元素并触发完成事件
-                if (!shouldShowAnimation()) {
-                    loadingElements.forEach(el => el && (el.style.display = "none"));
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!loadingElements[0]) return;
+
+        if (!shouldShowAnimation()) {
+            loadingElements.forEach(el => el && (el.style.display = "none"));
+            document.dispatchEvent(new CustomEvent("loadingAnimationComplete"));
+            return;
+        }
+
+        loadingElements.forEach(el => el && (el.style.display = "block"));
+
+        window.onload = () => {
+            setTimeout(() => {
+                // 关键修复：添加transform保持位置稳定
+                loadingElements.forEach(el => {
+                    if (el) {
+                        el.style.transition = "opacity 0.8s ease-out, transform 0.8s ease-out";
+                        el.style.opacity = "0";
+                        // 微小位移防止字体渲染抖动
+                        el.style.transform = "translateY(0.5px)";
+                    }
+                });
+
+                // 延长移除时间，确保过渡完成
+                setTimeout(() => {
+                    loadingElements.forEach(el => el && el.remove());
                     document.dispatchEvent(new CustomEvent("loadingAnimationComplete"));
-                    return;
-                }
-
-                // 显示动画元素
-                loadingElements.forEach(el => el && (el.style.display = "block"));
-
-                // 页面加载完成后执行淡出动画
-                window.onload = () => {
-                    setTimeout(() => {
-                        // 所有元素同步淡出（添加过渡效果）
-                        loadingElements.forEach(el => {
-                            if (el) {
-                                el.style.transition = "opacity 0.8s ease-out";
-                                el.style.opacity = "0";
-                            }
-                        });
-                        
-                        // 淡出完成后移除元素并触发完成事件
-                        setTimeout(() => {
-                            loadingElements.forEach(el => el && el.remove());
-                            document.dispatchEvent(new CustomEvent("loadingAnimationComplete"));
-                        }, 500); // 与过渡时间保持一致
-                    }, 500); // 动画显示1秒后开始淡出
-                };
-            });
-        })();
+                }, 800); // 与过渡时间完全匹配
+            }, 500);
+        };
+    });
+})();
 </script>
+    
